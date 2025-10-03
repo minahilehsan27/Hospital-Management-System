@@ -1,0 +1,34 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BuisnessLogicLayer;
+using DataTransferObjectClass;
+using Microsoft.IdentityModel.Tokens;
+namespace PresentationLayer
+{
+    public class PatientPL
+    {
+        public void PatientInput(PatientDTO patient)
+        {
+            Console.WriteLine("Enter Patient name:");
+            patient.Name = Console.ReadLine()!;
+            while (patient.Name.IsNullOrEmpty())
+            {
+                Console.WriteLine("Name cannot be empty.");
+                Console.WriteLine("Enter Patient Name:");
+                patient.Name = Console.ReadLine()!;
+            }
+            Console.WriteLine("Enter CNIC of Patient:");
+            patient.CNIC = Console.ReadLine()!;
+            while (patient.CNIC.IsNullOrEmpty())
+            {
+                Console.WriteLine("CNIC cannot be empty.");
+                Console.WriteLine("Enter CNIC of Doctor:");
+                patient.CNIC = Console.ReadLine()!;
+            }
+        }
+    }
+}
+
