@@ -1,0 +1,22 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using DataObjectTransferClass;
+namespace DataTransferObjectClass
+{
+    public class HospitalSystemDTO
+    {
+        public List<DoctorDTO> doctors;
+        public List<PatientDTO> patients;
+        public List<AppointmentDTO> appointments;
+        public HospitalSystemDTO() 
+        {
+            doctors = new List<DoctorDTO>();
+            patients = new List<PatientDTO>();
+            appointments = new List<AppointmentDTO>();
+
+        }
+    }
+}
