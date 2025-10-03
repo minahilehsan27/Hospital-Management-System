@@ -1,0 +1,171 @@
+using DataObjectTransferClass;
+using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using DataTransferObjectClass;
+using Microsoft.IdentityModel.Tokens;
+namespace DataAccessLay
+{
+
+    public class PatientDAL
+    {
+        static string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog = HospitalManagementSystem;Integrated Security=True;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False";
+        
+        public void AddPatient(PatientDTO patient)
+        {
+            string JsonObject = JsonSerializer.Serialize(patient);
+            using (StreamWriter writer = new StreamWriter("Patient.txt", append: true))
+            {
+                writer.WriteLine("Added:" + JsonObject);
+            }
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "Insert into Patient(Name,PatientCNIC) values(@patientName,@patientCNIC)";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("patientName", patient.Name);
+                    command.Parameters.AddWithValue("patientCNIC", patient.CNIC);
+                    command.ExecuteNonQuery();
+                }              
+            }
+        }
+        public List<int> GetPatientAppointmentIDs(string patientCINC)
+        {
+            List<int> appointments = new List<int>();
+            string query = "Select AppointmentId from Appointment where PatientCNIC = @patientCNIC";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open(); ;
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("patientCNIC", patientCINC);
+
+                SqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    appointments.Add((int)reader["AppointmentId"]);
+                }
+            }
+            return appointments;
+        }
+        public void UpdatePatient(PatientDTO updatedPatient)
+        {
+            List<string> listOfstrings = new List<string>();
+            using (StreamReader reader = new StreamReader("Patient.txt"))
+            {
+                string? text;
+                PatientDTO patient = new PatientDTO();
+                while ((text = reader.ReadLine()) != null)
+                {
+                    if (text.StartsWith("Added:"))
+                        text = text.Replace("Added:", "");
+                    if (string.IsNullOrWhiteSpace(text))
+                        continue;
+                    patient = JsonSerializer.Deserialize<PatientDTO>(text);
+                    if (patient.CNIC == updatedPatient.CNIC)
+                    {
+                        //patient.CNIC = updatedPatient.CNIC;(don't change it as it is primary key in patient table as serves as FK in Appointmnet table)
+                        patient.Name = updatedPatient.Name;
+                        patient.Appointments = updatedPatient.Appointments;
+                        string serializedObject = JsonSerializer.Serialize(patient);
+                        listOfstrings.Add(serializedObject);
+                    }
+                    else
+                        listOfstrings.Add(text);
+                }
+            }
+            using (StreamWriter writer = new StreamWriter("Patient.txt", append: false))
+            {
+                foreach (string s in listOfstrings)
+                    writer.WriteLine("Added:" + s);
+            }      
+            string query = "Update Patient Set Name = @newName  where PatientCNIC = @oldCNIC";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("newName", updatedPatient.Name);
+                command.Parameters.AddWithValue("oldCNIC", updatedPatient.CNIC);
+                command.ExecuteNonQuery();
+            }
+        }
+        public List<PatientDTO> GetAllPatients() 
+        {
+            List<PatientDTO> patients = new List<PatientDTO>();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = "Select * from Patient";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            PatientDTO patient = new PatientDTO();
+                            patient.Name = (string)reader["Name"];
+                            patient.CNIC = (string)reader["PatientCNIC"];
+                            patient.Appointments = GetPatientAppointmentIDs(patient.CNIC);
+                            patients.Add(patient);
+                        }
+
+                    }
+                }
+                catch
+                {
+                    throw new Exception("Fatal Error Occured.");
+                }
+           }
+            return patients;
+        }
+        public void DeletePatient(PatientDTO Patient)
+        {
+            List<string> listOfstrings = new List<string>();
+            using (StreamReader reader = new StreamReader("Patient.txt"))
+            {
+                string? text;
+                PatientDTO patient = new PatientDTO();
+   
+                while ((text = reader.ReadLine()) != null)
+                {
+                    if (text.StartsWith("Added:"))
+                        text = text.Replace("Added:", "");
+                    if (string.IsNullOrWhiteSpace(text))
+                        continue;
+                    patient = JsonSerializer.Deserialize<PatientDTO>(text);
+                    if (patient.CNIC != Patient.CNIC)
+                        listOfstrings.Add(text);
+
+                }
+            }
+            using (StreamWriter writer = new StreamWriter("Patient.txt", append: false))
+            {
+                foreach (string s in listOfstrings)
+                    writer.WriteLine("Added:" + s);
+            }
+            string query2 = "Delete from  Appointment where PatientCNIC = @cnic";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(query2, connection);
+                command.Parameters.AddWithValue("cnic", Patient.CNIC);
+                command.ExecuteNonQuery();
+            }
+            string query1 = "Delete from  Patient where PatientCNIC = @cnic";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(query1, connection);
+                command.Parameters.AddWithValue("cnic", Patient.CNIC);
+                command.ExecuteNonQuery();
+            }
+  
+        }
+    }
+    
+}
