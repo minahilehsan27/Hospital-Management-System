@@ -1,0 +1,45 @@
+using DataAccessLay;
+using DataTransferObjectClass;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+namespace BuisnessLogicLayer
+{
+    public class PatientBLL
+    {
+        private static PatientDAL PatientDAL = new PatientDAL();
+        private static PatientDTO ? patientDTO;
+        public void AddPatient(PatientDTO patient)
+        {
+             patientDTO = new PatientDTO(patient.Name,patient.CNIC, PatientDAL.GetPatientAppointmentIDs(patient.CNIC));
+            PatientDAL.AddPatient(patientDTO);
+        }
+        public bool HasAppointment(int appointmentID)
+        {
+            if(patientDTO == null) 
+                return false;
+            foreach (int appointmet in patientDTO.Appointments)
+            {
+                if (appointmentID == appointmet)
+                    return true;
+            }
+            return false;
+        }
+        public void updatePatient(PatientDTO patient)
+        {
+            PatientDAL.UpdatePatient(patient);
+        }   
+        public void deletePatient(PatientDTO patient)
+        {
+            PatientDAL.DeletePatient(patient);
+        }
+        public List<PatientDTO> GetAllPatient()
+        {
+            return PatientDAL.GetAllPatients();
+        }
+    }
+}
+
