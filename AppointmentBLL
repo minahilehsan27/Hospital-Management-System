@@ -1,0 +1,53 @@
+using DataAccessLay;
+using DataObjectTransferClass;
+using DataTransferObjectClass;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BuisnessLogicLayer
+{
+    public class AppointmentBLL
+    {
+        private static AppointmentDAL appointmentDAL = new AppointmentDAL();
+        private AppointmentDTO? appointment;
+
+        public void AddAppointment(AppointmentDTO appointment)
+        {
+            if (!appointmentDAL.DoesDoctorIdExist(appointment.DoctorID))
+                throw new ArgumentException($"Error: This Doctor ID {appointment.DoctorID} does not exist.");
+            if (!appointmentDAL.DoesPatientCNICExist(appointment.PatientCNIC))
+                throw new ArgumentException($"Error: Patient CNIC {appointment.PatientCNIC} does not exist.");
+            appointment = new AppointmentDTO(GenerateUniqueRandomID(), appointment.DoctorID, appointment.PatientCNIC, appointment.AppointmentDate);
+            appointmentDAL.AddAppointment(appointment);
+        }
+    
+        private int GenerateUniqueRandomID()
+        {
+
+            Random rand = new Random();
+            int randomID = rand.Next();
+            while (appointmentDAL.IsUniqueAppointmentID(randomID) == false)
+            {
+                randomID = rand.Next(1, int.MaxValue);
+            }
+            return randomID;
+        }
+        public void cancelAppointment(int appointmentId,string cnic)
+        {
+            if (appointmentDAL.DoesPatientCNICExist(cnic) && appointmentDAL.DoesAppointmentIdExist(appointmentId))
+            {
+                appointmentDAL.CancelAppointment(appointmentId, cnic);
+
+            }
+        }
+        public DoctorDTO? doctorWithMaximumRequirements()
+        {
+            return  appointmentDAL.DoctorWithMaximumRequirements();
+        }
+
+
+    }
+}
