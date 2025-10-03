@@ -1,0 +1,28 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DataTransferObjectClass
+{
+    public class AppointmentDTO
+    {
+        public int AppointmentID { get; set; }
+        public int DoctorID { get; set; }
+        public string PatientCNIC { get; set; }
+        public DateTime AppointmentDate { get; set; }
+        public AppointmentDTO() { }
+        public AppointmentDTO(int appointmentID,int doctorID, string patientCNIC, DateTime date)
+        {
+            AppointmentID = appointmentID;
+            DoctorID = doctorID;
+            PatientCNIC = patientCNIC;
+            AppointmentDate = date;
+        }
+        public override string ToString()
+        {
+            return $"AppointmentID: {AppointmentID},DoctorID: {DoctorID},PatientCNIC: {PatientCNIC},AppointmentDate: {AppointmentDate}";
+        }
+    }
+}
