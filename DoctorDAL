@@ -1,0 +1,177 @@
+using DataObjectTransferClass;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.IO;
+using Microsoft.Data.SqlClient;
+using System.Numerics;
+using DataTransferObjectClass;
+namespace DataAccessLay
+{
+    public class DoctorDAL
+    {
+        static string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog = HospitalManagementSystem;Integrated Security=True;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False";
+        public void AddDoctor(DoctorDTO doctor)
+        {
+            string JsonObject = JsonSerializer.Serialize(doctor);
+            using (StreamWriter writer = new StreamWriter("Doctor.txt", append: true))
+            {
+                writer.WriteLine("Added:" + JsonObject);
+            }
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "INSERT INTO Doctor(DoctorId,Name, Specialization, IsAvailable) VALUES(@Id,@doctorName, @doctorSpecialization, @doctorAvailability)";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("Id",doctor.doctorId);
+                    command.Parameters.AddWithValue("doctorName", doctor.Name);
+                    command.Parameters.AddWithValue("doctorSpecialization", doctor.Specialization);
+                    command.Parameters.AddWithValue("doctorAvailability", doctor.IsAvailable);
+                    command.ExecuteNonQuery();
+                }
+          }
+        }
+        public bool IsUniqueDoctorID(int id)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "SELECT * FROM Doctor where DoctorID = @doctorId";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("doctorId", id);
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                    return false;
+                else
+                    return true;
+            }
+        }
+        public List<DoctorDTO> GetAllDoctors()
+        {
+            List<DoctorDTO> doctors = new List<DoctorDTO>();
+            using (SqlConnection connection = new SqlConnection(connectionString)) 
+            {
+                try
+                {
+                    connection.Open();
+                    string query = "SELECT * FROM Doctor";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlDataReader sqlDataReader = command.ExecuteReader())
+                    {
+                        while (sqlDataReader.Read())
+                        {
+                            DoctorDTO doctor = new DoctorDTO();
+                            doctor.Name = (string)sqlDataReader["Name"];
+                            doctor.doctorId = (int)sqlDataReader["DoctorId"];
+                            doctor.Specialization = (string)sqlDataReader["Specialization"];
+                            doctor.IsAvailable = (bool)sqlDataReader["IsAvailable"];
+                            doctor.doctorId = (int)sqlDataReader["DoctorId"];
+                            doctors.Add(doctor);
+                        }
+                    }
+                }
+                catch
+                {
+                    throw new Exception("Fatal error occured.");
+                }
+            }
+            return doctors;
+        }
+        public void UpdateDoctor(DoctorDTO updatedDoctor)
+        {
+            List<string> listOfstrings = new List<string>();
+            using (StreamReader reader = new StreamReader("Doctor.txt"))
+            {
+                string? text;
+                DoctorDTO doctor = new DoctorDTO();
+                while ((text = reader.ReadLine()) != null)
+                {
+                    if (text.StartsWith("Added:"))
+                        text = text.Replace("Added:", "");
+                    if (string.IsNullOrWhiteSpace(text))
+                        continue;
+                    doctor = JsonSerializer.Deserialize<DoctorDTO>(text);
+                    if (doctor.doctorId == updatedDoctor.doctorId)
+                    {
+
+                        doctor.Name = updatedDoctor.Name;
+                        doctor.Specialization = updatedDoctor.Specialization;
+                        doctor.IsAvailable = updatedDoctor.IsAvailable;
+                        string serializedObject = JsonSerializer.Serialize(doctor);
+                        listOfstrings.Add(serializedObject);
+                    }
+                    else
+                        listOfstrings.Add(text);
+                }
+            }
+            using (StreamWriter writer = new StreamWriter("Doctor.txt", append: false))
+            {
+                foreach (string s in listOfstrings)
+                    writer.WriteLine("Added:" + s);
+            }
+
+            string query = "Update Doctor Set Name = @newName,Specialization = @newSpecialization ,IsAvailable =  @AvailabilityStatus  where DoctorId = @Id";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("Id", updatedDoctor.doctorId);
+                command.Parameters.AddWithValue("newName", updatedDoctor.Name);
+                command.Parameters.AddWithValue("newSpecialization", updatedDoctor.Specialization);
+                command.Parameters.AddWithValue("AvailabilityStatus", updatedDoctor.IsAvailable);
+                command.ExecuteNonQuery();
+            }
+        }
+        public void DeleteDoctor(DoctorDTO doctorToUpdate)
+        {
+            List<string> listOfstrings = new List<string>();
+            try
+            {
+                using (StreamReader reader = new StreamReader("Doctor.txt"))
+                {
+                    string? text;
+                    DoctorDTO doctor = new DoctorDTO();
+
+                    while ((text = reader.ReadLine()) != null)
+                    {
+                        if (text.StartsWith("Added:"))
+                            text = text.Replace("Added:", "");
+                        if (string.IsNullOrWhiteSpace(text))
+                            continue;
+                        doctor = JsonSerializer.Deserialize<DoctorDTO>(text);
+                        if (doctor.doctorId != doctorToUpdate.doctorId)
+                            listOfstrings.Add(text);
+                    }
+                }
+            }
+            catch
+            {
+                Console.WriteLine($"Warning.");
+            }
+            using (StreamWriter writer = new StreamWriter("Doctor.txt", append: false))
+            {
+                foreach (string s in listOfstrings)
+                    writer.WriteLine("Added:" + s);
+            }
+            string query1 = "Delete from  Appointment where DoctorId = @Id";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(query1, connection);
+                command.Parameters.AddWithValue("Id", doctorToUpdate.doctorId);
+                command.ExecuteNonQuery();
+            }
+            string query2 = "Delete from  Doctor where DoctorId = @Id";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(query2, connection);
+                command.Parameters.AddWithValue("Id",doctorToUpdate.doctorId);
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+}
+    
+    
+
