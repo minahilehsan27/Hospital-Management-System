@@ -1,0 +1,151 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using DataObjectTransferClass;
+using DataAccessLay;
+using DataTransferObjectClass;
+using System.Text.Json.Serialization;
+using System.Text;
+using System.Text.Json;
+using System.Numerics;
+using Microsoft.Data.SqlClient;
+namespace BuisnessLogicLayer
+{
+    public class HospitalSystemBLL
+    {
+
+        private PatientDAL patientDAL = new PatientDAL();
+        private PatientBLL patientBLL = new PatientBLL();
+        private DoctorDTO DoctorDTO = new DoctorDTO();
+        private DoctorBLL doctorBLL = new DoctorBLL();
+        private AppointmentBLL appointmentBLL = new AppointmentBLL();
+        private static HospitalSystemDTO hospitalsystemDTO = new HospitalSystemDTO();
+        public HospitalSystemBLL()
+        {
+            hospitalsystemDTO.patients = patientBLL.GetAllPatient();
+            hospitalsystemDTO.doctors = doctorBLL.GetAllDoctor();
+        }
+        public void AddPatient(PatientDTO patientDTO)
+        {
+            patientBLL.AddPatient(patientDTO);
+            hospitalsystemDTO.patients = patientBLL.GetAllPatient();
+            //hospitalsystemDTO.patients = patientBLL.GetAllPatient();so that when a object is created it loads te patients before not only on the call of add patients.
+            //hospitalsystemDTO.patients.Add(patientDTO);everytime empty cuz every time an object is created this statement is runing for every new obj HospitalSystemDTO hospitalsystemDTO = new HospitalSystemDTO();initializing it to one so you have to populate it from the memory always
+        }
+        public void AddDoctor(DoctorDTO doctorDTO) 
+        {
+            doctorBLL.AddDoctor(doctorDTO);
+            hospitalsystemDTO.doctors = doctorBLL.GetAllDoctor();
+        }
+        public void UpdatePatient(String cnic,string name)
+        {
+            
+            bool find = false;
+            foreach (PatientDTO patient in hospitalsystemDTO.patients)
+            {
+                if (patient.CNIC == cnic)
+                {
+                    patient.Name = name; ;
+                    patientBLL.updatePatient(patient);
+                    find = true;
+                }
+            }
+            if (!find)
+                throw new Exception($"The Patient with this CNIC {cnic} doesn't exsist.");
+        }
+       public void DisplayPatients()
+        {
+            foreach(PatientDTO patient in hospitalsystemDTO.patients)
+                Console.WriteLine(patient);
+        }
+        public void DeletePatient(string cnic)
+        {
+            foreach(PatientDTO patient in hospitalsystemDTO.patients)
+            {
+                if (patient.CNIC == cnic)
+                {
+                    patientBLL.deletePatient(patient);
+                    hospitalsystemDTO.patients.Remove(patient);
+                }
+            }
+        }
+
+        public void UpdateDoctor(int dId)
+        {
+            //ask in pl doctor name and all data and pass here the doctor Dto 
+            bool find = false;
+            foreach (DoctorDTO doctor in hospitalsystemDTO.doctors)
+            {
+                if (doctor.doctorId == dId)
+                {
+                    doctorBLL.updateDoctor(doctor);
+                    find = true;
+                }
+            }
+            if (!find)
+              throw new Exception($"The Doctor with this Id {dId} doesn't exist.");
+            
+        }
+        public void DisplayDoctors()
+        {
+            foreach(DoctorDTO doctor in hospitalsystemDTO.doctors)
+                Console.WriteLine("DoctorId:" + doctor.doctorId + doctor);
+        }
+        public void DeleteDoctor(int doctorId)
+        {
+            foreach (DoctorDTO doctor in hospitalsystemDTO.doctors)
+            {
+                if (doctor.doctorId == doctorId)
+                {
+                    doctorBLL.deleteDoctor(doctor);
+                    hospitalsystemDTO.doctors.Remove(doctor);
+                }
+            }
+        }
+        public void BookAppointment(int doctorID, string cnic, DateTime date)
+        {
+            foreach(DoctorDTO doctor in hospitalsystemDTO.doctors)
+            {
+                if(doctor.doctorId == doctorID)
+                {
+                    if (doctor.IsAvailable)
+                    {
+
+                        AppointmentDTO appointment = new AppointmentDTO();
+                        appointment.DoctorID = doctorID;
+                        appointment.PatientCNIC = cnic;
+                        appointment.AppointmentDate = date;
+                        appointmentBLL.AddAppointment(appointment);
+                        hospitalsystemDTO.appointments.Add(appointment);
+                    }
+                }
+            }
+        }
+        public void CancelAppointment(int appointmentID, string cnic)
+        {
+            foreach (AppointmentDTO appointment in hospitalsystemDTO.appointments)
+            {
+                if (appointment.PatientCNIC == cnic)
+                {
+                    appointmentBLL.cancelAppointment(appointmentID, cnic);
+                    hospitalsystemDTO.appointments.Remove(appointment);
+                }
+            }
+        }
+        public void DispayAppointmnets()
+        {
+            foreach (AppointmentDTO appointment in hospitalsystemDTO.appointments)
+            {
+                Console.WriteLine(appointment);
+            }
+        }
+        public DoctorDTO ? DeclareMostConsultedDoctor()
+        {
+           return appointmentBLL.doctorWithMaximumRequirements();
+            //handle in pl or console if null
+        }
+    }
+}
+
