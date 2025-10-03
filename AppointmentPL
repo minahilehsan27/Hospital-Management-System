@@ -1,0 +1,52 @@
+using BuisnessLogicLayer;
+using DataTransferObjectClass;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.IdentityModel.Tokens;
+using System.Linq.Expressions;
+using System.ComponentModel.Design;
+namespace PresentationLayer
+{
+    public class AppointmentPL
+    {
+        public void input()
+        {
+            AppointmentDTO appointment = new AppointmentDTO();
+            Console.WriteLine("Enter Doctor ID:");
+            string DoctorIdCheck = Console.ReadLine()!;
+            while(DoctorIdCheck.IsNullOrEmpty()) 
+            {
+                Console.WriteLine("Doctor cannot be empty.");
+                Console.WriteLine("Enter Doctor ID:");
+                appointment.DoctorID = int.Parse(Console.ReadLine()!)!;
+            } 
+            appointment.DoctorID = int.Parse(DoctorIdCheck);
+            
+            Console.WriteLine("Enter Patient CNIC:");
+            appointment.PatientCNIC = Console.ReadLine()!;
+            while (appointment.PatientCNIC.IsNullOrEmpty())
+            {
+                Console.WriteLine("CNIC cannot be empty.");
+                Console.WriteLine("Enter Patient CNIC:");
+                appointment.PatientCNIC = Console.ReadLine()!;
+            }
+
+            appointment.AppointmentDate = DateTime.Now;
+
+            AppointmentBLL appointmentBLL = new AppointmentBLL();
+            try
+            {
+                appointmentBLL.AddAppointment(appointment);
+            }
+            catch
+            {
+                Console.WriteLine("Appointment not added successfully.");
+            }
+            Console.WriteLine(appointment.ToString());
+
+        }
+    }
+}
