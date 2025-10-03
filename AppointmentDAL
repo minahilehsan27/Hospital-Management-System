@@ -1,0 +1,174 @@
+using DataObjectTransferClass;
+using DataTransferObjectClass;
+using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace DataAccessLay
+{
+    public class AppointmentDAL
+    {
+        string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog = HospitalManagementSystem;Integrated Security=True;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False";
+        public bool DoesDoctorIdExist(int id)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "Select * from Doctor where DoctorId = @id";
+                SqlCommand command = new SqlCommand(query,connection);
+                command.Parameters.AddWithValue("id", id);
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                    return true;
+                else
+                    return false;
+            }
+        }
+        public bool DoesPatientCNICExist(string cnic)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "Select * from Patient where PatientCNIC = @cnic";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("cnic", cnic);
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                    return true;
+                else
+                    return false;
+            }
+        }
+        public void AddAppointment(AppointmentDTO appointment)
+        {
+            string JsonObject = JsonSerializer.Serialize(appointment);
+            using (StreamWriter writer = new StreamWriter("Appointment.txt", append: true))
+            {
+                writer.WriteLine("Added:" + JsonObject);
+            }
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "INSERT INTO Appointment(AppointmentId,DoctorId,PatientCNIC,AppointmentDate) VALUES(@Id,@doctorId, @PatientCNIC, @date)";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("Id", appointment.AppointmentID);
+                    command.Parameters.AddWithValue("doctorId", appointment.DoctorID);
+                    command.Parameters.AddWithValue("PatientCNIC", appointment.PatientCNIC);
+                    command.Parameters.AddWithValue("date", appointment.AppointmentDate);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+        public bool IsUniqueAppointmentID(int id)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "SELECT * FROM Appointment where AppointmentID = @Id";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("Id", id);
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                    return false;
+                else
+                    return true;
+            }
+        }
+        public bool DoesAppointmentIdExist(int appointmentId)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "Select * from Appointment where AppointmentId= @id";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("id", appointmentId);
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                    return true;
+                else
+                    return false;
+            }
+        }
+        public void CancelAppointment(int appointmentId, string cnic)
+        {
+
+            List<string> listOfstrings = new List<string>();
+            try
+            {
+                using (StreamReader reader = new StreamReader("Appointment.txt"))
+                {
+
+                    string? text;
+                    AppointmentDTO appointment = new AppointmentDTO();
+                    bool check;
+                    while ((text = reader.ReadLine()) != null)
+                    {
+                        if (text.StartsWith("Added:"))
+                            text = text.Replace("Added:", "");
+                        if (string.IsNullOrWhiteSpace(text))
+                            continue;
+                        appointment = JsonSerializer.Deserialize<AppointmentDTO>(text);
+                        check = (appointment.AppointmentID == appointmentId && appointment.PatientCNIC == cnic);
+                        if (!check)
+                            listOfstrings.Add(text);
+                    }
+                }
+            }
+            catch
+            {
+                Console.WriteLine($"Warning.");
+            }
+            using (StreamWriter writer = new StreamWriter("Appointment.txt", append: false))
+            {
+                foreach (string s in listOfstrings)
+                    writer.WriteLine("Added:" + s);
+            }
+            string query = "Delete from  Appointment where AppointmentId = @Id and PatientCNIC = @cnic";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("Id",appointmentId);
+                command.Parameters.AddWithValue("cnic", cnic);
+                command.ExecuteNonQuery();
+            }
+        }
+        public DoctorDTO DoctorWithMaximumRequirements()
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+     
+                string query = "SELECT TOP 1 D.DoctorId,D.Name,D.Specialization, D.IsAvailable,COUNT(D.DoctorId) FROM Doctor D  JOIN  Appointment A ON D.DoctorId = A.DoctorId  GROUP BY  D.DoctorId, D.Name, D.Specialization, D.IsAvailable ORDER BY COUNT(D.DoctorId) DESC"; 
+
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    { 
+                        reader.Read();
+                        DoctorDTO newDoctor = new DoctorDTO();
+                        newDoctor.doctorId = (int)reader["DoctorId"];
+                        newDoctor.Name = (string)reader["Name"];
+                        newDoctor.Specialization = (string)reader["Specialization"];
+                        newDoctor.IsAvailable = (bool)reader["IsAvailable"];
+                        return newDoctor;
+                    }
+                    else
+                    {
+                        throw new Exception("No appointments have been booked yet.");
+                    }
+                }
+            }
+        }
+    }
+}
+
