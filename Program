@@ -1,0 +1,25 @@
+using BuisnessLogicLayer;
+using DataAccessLay;
+using DataObjectTransferClass;
+using DataTransferObjectClass;
+using PresentationLayer;
+using System.Xml.Linq;
+
+namespace HospitalMangementSystemhw
+{
+
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+
+            
+
+            HospitalSystemPL hospitalSystem = new HospitalSystemPL();
+            hospitalSystem.HospitalSystem();
+
+        }
+    }
+}
+
+
