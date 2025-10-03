@@ -1,0 +1,31 @@
+using DataObjectTransferClass;
+using BuisnessLogicLayer;
+using Microsoft.IdentityModel.Tokens;
+namespace PresentationLayer
+{
+    public class DoctorPL
+    {
+        public void input(DoctorDTO doctor)
+        {
+            Console.WriteLine("Enter doctor name:");
+            doctor.Name = Console.ReadLine()!;
+            while (doctor.Name.IsNullOrEmpty())
+            { 
+                Console.WriteLine("Name cannot be empty.");
+                Console.WriteLine("Enter doctor name:");
+                doctor.Name = Console.ReadLine()!;
+            }
+            Console.WriteLine("Enter specialization of Doctor:");
+            doctor.Specialization = Console.ReadLine()!;
+            while (doctor.Specialization.IsNullOrEmpty()) 
+            {
+                Console.WriteLine("Specialization cannot be empty.");
+                Console.WriteLine("Enter specialization of Doctor:");
+                doctor.Specialization = Console.ReadLine()!;
+            }
+        }
+    }
+
+   
+}
+    
