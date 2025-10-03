@@ -1,0 +1,81 @@
+using DataAccessLay;
+using DataObjectTransferClass;
+using System.Numerics;
+namespace BuisnessLogicLayer
+{
+    public class DoctorBLL
+    {
+        private static DoctorDAL doctorDAL = new DoctorDAL();
+        private DoctorDTO ? doctor;
+        public void AddDoctor(DoctorDTO dr)
+        {
+            doctor = new DoctorDTO(GenerateUniqueRandomID(), dr.Name, dr.Specialization, true);
+            doctorDAL.AddDoctor(doctor);
+        }
+
+        public void MarkUnavailable(DoctorDTO doctor)
+        {
+            if (doctor.IsAvailable)
+            {
+                doctor.IsAvailable = false;
+            }
+        }
+        public void MarkAvailable(DoctorDTO doctor)
+        {
+            if (!doctor.IsAvailable)
+            {
+                doctor.IsAvailable = true;
+            }
+        }
+        private int GenerateUniqueRandomID()
+        {
+
+            Random rand = new Random();
+            int randomID = rand.Next();
+            while (doctorDAL.IsUniqueDoctorID(randomID) == false)
+            {
+                randomID = rand.Next(1, int.MaxValue);
+            }
+            return randomID;
+        }
+        public List<DoctorDTO> GetAllDoctor()
+        {
+            return doctorDAL.GetAllDoctors();
+        }
+        public void updateDoctor(DoctorDTO doctor)
+        {
+            doctorDAL.UpdateDoctor(doctor);
+        }
+        public void deleteDoctor(DoctorDTO doctor)
+        {
+            doctorDAL.DeleteDoctor(doctor);
+        }
+
+    }
+}
+    
+
+    
+   /**//* public class HospitalSystemBLL
+    {
+        private static PatientDAL patientDAL = new PatientDAL();
+        public void AddPatient(PatientDTO patient)
+        {
+            patientDAL.AddPatient(patient);
+        }
+        public void UpdatePatient(string cnic)
+        { 
+
+        }
+        public void DeletePatient(string cnic) { }
+        public void DisplayPatients() { }
+        public void  AddDoctor() { }
+        public void UpdateDoctor(int doctorID) { }
+        public void DeleteDoctor(int doctorID) { }
+        public void DisplayDoctors() { }
+        public void BookAppointment(int doctorID, string cnic, DateTime date) { }
+        public void CancelAppointment(int appointmentID, string cnic) { }
+        public void DeclareMostConsultedDoctor() { }
+    }
+
+}*/
