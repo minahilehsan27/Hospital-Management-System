@@ -1,0 +1,120 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+using BuisnessLogicLayer;
+using DataObjectTransferClass;
+using DataTransferObjectClass;
+namespace PresentationLayer
+{
+    public class HospitalSystemPL
+    {
+        private HospitalSystemBLL hospitalSystemBLL = new HospitalSystemBLL();
+        PatientDTO patient = new PatientDTO();
+        PatientPL patientPL = new PatientPL();
+        DoctorDTO doctor = new DoctorDTO();
+        DoctorPL doctorPL = new DoctorPL();
+        public void HospitalSystem()
+        {
+            int choice;
+            do
+            {
+                Console.WriteLine("----------Hospital Management System-----------");
+                Console.WriteLine("Enter 1 to Add Patient.");
+                Console.WriteLine("Enter 2 to Update Patient.");
+                Console.WriteLine("Enter 3 to Delete Patient.");
+                Console.WriteLine("Enter 4 to Display Patients.");
+                Console.WriteLine("Enter 5 to Add Doctor.");
+                Console.WriteLine("Enter 6 to Update Doctor.");
+                Console.WriteLine("Enter 7 to Delete Doctor.");
+                Console.WriteLine("Enter 8 to DisplayDoctors.");
+                Console.WriteLine("Enter 9 to Book an Appointment.");
+                Console.WriteLine("Enter 10 to Cancel an Appointment.");
+                Console.WriteLine("Enter 11 to Declare Most Consulted Doctor.");
+                Console.WriteLine("Enter 12 to exit the program.");
+                choice = int.Parse(Console.ReadLine()!);
+                if (choice == 1)
+                {
+                    patientPL.PatientInput(patient);
+                    hospitalSystemBLL.AddPatient(patient);
+                }
+                else if (choice == 2)
+                {
+                    Console.WriteLine("Enter the CNIC of the Patient you want to Update:");
+                    string CNIC = Console.ReadLine()!;
+                    if (CNIC != null)
+                    {
+                        Console.WriteLine("Enter name of the patient:");
+                        string name = Console.ReadLine()!;
+
+                        hospitalSystemBLL.UpdatePatient(CNIC, name);
+                    }
+                    else
+                        Console.WriteLine("CNIC can't be null.");
+                    
+                }
+                else if (choice == 3)
+                {
+                    Console.WriteLine("Enter the CNIC of the Patient you want to Delete:");
+                    string CNIC = Console.ReadLine()!;
+                    if (CNIC != null)
+                        hospitalSystemBLL.DeletePatient(CNIC);
+                    else
+                        Console.WriteLine("CNIC can't be null.");
+             
+                }
+                else if (choice == 4)
+                {
+                    Console.WriteLine("-----------Here is the List of All the Patients----------");
+                    hospitalSystemBLL.DisplayPatients();
+                }
+                else if (choice == 5)
+                {
+                    doctorPL.input(doctor);
+                    hospitalSystemBLL.AddDoctor(doctor);
+                }
+                else if (choice == 6)
+                {
+                    Console.WriteLine("Enter the ID of the Doctor you want to Update:");
+                    int id = int.Parse(Console.ReadLine()!);
+                    hospitalSystemBLL.UpdateDoctor(id);
+                }
+                else if (choice == 7)
+                {
+                    Console.WriteLine("Enter the ID of the Doctor you want to Delete:");
+                    int id = int.Parse(Console.ReadLine()!);
+                    hospitalSystemBLL.DeleteDoctor(id);
+                }
+                else if (choice == 8)
+                {
+                    hospitalSystemBLL.DisplayDoctors();
+                }
+                else if (choice == 9)
+                {
+                    Console.WriteLine("Enter Doctor Id:");
+                    int id = int.Parse(Console.ReadLine()!);
+                    Console.WriteLine("Enter Patient CNIC:");
+                    string cnic = Console.ReadLine()!;
+                    hospitalSystemBLL.BookAppointment(id, cnic, System.DateTime.Now);
+                }
+                else if (choice == 10)
+                {
+                    Console.WriteLine("Enter Appointment Id:");
+                    int id = int.Parse(Console.ReadLine()!);
+                    Console.WriteLine("Enter Patient CNIC:");
+                    string cnic = Console.ReadLine()!;
+                    hospitalSystemBLL.CancelAppointment(id, cnic);
+                }
+                else if (choice == 11)
+                {
+                    DoctorDTO doctor = hospitalSystemBLL.DeclareMostConsultedDoctor();
+                    Console.WriteLine(doctor);
+                }
+            } while (choice != 12);
+
+
+        }
+    }
+}
