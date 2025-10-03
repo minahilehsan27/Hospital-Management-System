@@ -1,0 +1,28 @@
+using DataObjectTransferClass;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DataTransferObjectClass
+{
+    public class PatientDTO
+    {
+        public string Name { get; set; }
+        public List<int> Appointments;
+        public string CNIC { get; set; }
+        public PatientDTO() { }
+        public PatientDTO(string name , string cnic, List<int> appointments)
+        {
+            Appointments = appointments;
+            Name = name;
+            CNIC = cnic;
+        } 
+        public override string ToString() 
+        {
+            return $"Patient Name:{Name},Patient CNIC:{CNIC}";
+        }
+
+    }
+}
