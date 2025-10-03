@@ -1,0 +1,30 @@
+using System;
+using System.Diagnostics.Metrics;
+using System.Numerics;
+
+namespace DataObjectTransferClass
+{
+    public class DoctorDTO
+    {
+        public int doctorId { get; set; }
+        public string Name { get; set; }
+        public string Specialization { get; set; }
+        public bool IsAvailable { get; set; }
+       
+        public DoctorDTO() { }  
+        public DoctorDTO(int doctorId ,string name, string specialization,bool availability)
+        {
+            this.doctorId = doctorId;
+            Name = name;
+            Specialization = specialization;
+            IsAvailable = availability;
+        }
+        public override string ToString()
+        {
+            return $"DoctorName: {Name},DoctorSpecilaization: {Specialization},Availability: {IsAvailable}";
+        }
+    }
+    
+    
+    
+}
